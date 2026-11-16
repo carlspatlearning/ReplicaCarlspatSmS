@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "OlufunmilyoSMS",
-  "short_name": "OlufunmilyoSMS",
-  "description": "OlufunmilyoSMS for parents, students, teachers, staff and administrators.",
+  "name": "Carlspat Private School",
+  "short_name": "Carlspat SMS",
+  "description": "Carlspat Private School portal for parents, students, teachers, staff and administrators.",
   "start_url": "/login?source=android",
   "scope": "/",
   "display": "standalone",
@@ -12,22 +12,10 @@
   "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/carlspat-icon.svg?v=2",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }

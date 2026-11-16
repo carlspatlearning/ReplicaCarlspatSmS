@@ -3,17 +3,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "OlufunmilyoSMS", template: "%s · OlufunmilyoSMS" },
+  title: { default: "Carlspat Private School", template: "%s · Carlspat Private School" },
   description:
-    "OlufunmilyoSMS Management System — Emphasis on All-Round Development. Ido Ekiti, Ekiti State, Nigeria.",
-  applicationName: "OlufunmilyoSMS",
+    "Carlspat Private School Management System — Emphasis on All-Round Development. Ido Ekiti, Ekiti State, Nigeria.",
+  applicationName: "Carlspat Private School",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    icon: [{ url: "/carlspat-icon.svg?v=2", type: "image/svg+xml" }],
+    apple: [{ url: "/carlspat-icon.svg?v=2", type: "image/svg+xml" }],
   },
 };
 
