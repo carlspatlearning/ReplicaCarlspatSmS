@@ -498,6 +498,7 @@ model Subject {
   school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classSubjects ClassSubject[]
   scores        Score[]
+  resources     Resource[]
 
   @@unique([schoolId, code])
 }
@@ -785,13 +786,16 @@ model Resource {
   fileSize     Int?
   mimeType     String
   classRoomId  String?
+  subjectId    String?
   uploadedById String
   createdAt    DateTime     @default(now())
 
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classRoom  ClassRoom? @relation(fields: [classRoomId], references: [id])
+  subject    Subject?   @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   uploadedBy User       @relation("UploadedResources", fields: [uploadedById], references: [id])
 
   @@index([schoolId, createdAt])
   @@index([classRoomId])
+  @@index([subjectId])
 }

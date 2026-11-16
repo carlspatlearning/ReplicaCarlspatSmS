@@ -38,7 +38,7 @@ const mockPrisma = {
   feeStructure: { findMany: jest.fn() },
   expense: { findMany: jest.fn(), findUnique: jest.fn(), count: jest.fn() },
   expenseCategory: { findMany: jest.fn(), findUnique: jest.fn() },
-  resource: { findMany: jest.fn(), findUnique: jest.fn() },
+  resource: { findMany: jest.fn(), findUnique: jest.fn(), deleteMany: jest.fn() },
   gradeScale: { findMany: jest.fn() },
   assessmentType: { findMany: jest.fn() },
   $transaction: jest.fn(),
@@ -191,6 +191,28 @@ describe("Lists are fenced to the caller's school", () => {
       .set("Authorization", `Bearer ${adminA}`);
     expect(res.status).toBe(404);
     expect(res.body.message).toMatch(/upload it again/i);
+  });
+
+  it("bulk deletes resources only inside the selected class and school", async () => {
+    mockPrisma.classRoom.findUnique.mockResolvedValue({ id: "class-a", schoolId: SCHOOL_A, name: "JSS 1" });
+    mockPrisma.resource.deleteMany.mockResolvedValue({ count: 3 });
+    const res = await request(app)
+      .delete("/api/v1/resources/bulk?classId=class-a")
+      .set("Authorization", `Bearer ${adminA}`);
+    expect(res.status).toBe(200);
+    expect(mockPrisma.resource.deleteMany).toHaveBeenCalledWith({
+      where: { schoolId: SCHOOL_A, classRoomId: "class-a" },
+    });
+    expect(res.body.data.count).toBe(3);
+  });
+
+  it("refuses to bulk delete resources for another school's class", async () => {
+    mockPrisma.classRoom.findUnique.mockResolvedValue({ id: "class-b", schoolId: SCHOOL_B, name: "JSS 1" });
+    const res = await request(app)
+      .delete("/api/v1/resources/bulk?classId=class-b")
+      .set("Authorization", `Bearer ${adminA}`);
+    expect(res.status).toBe(404);
+    expect(mockPrisma.resource.deleteMany).not.toHaveBeenCalled();
   });
 
   it("GET /settings/grading filters by school", async () => {

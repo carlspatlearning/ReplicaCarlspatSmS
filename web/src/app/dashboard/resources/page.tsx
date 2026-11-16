@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, FileText, Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
+import { Download, FileText, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { getUser, getAccessToken } from "@/lib/auth";
 import { api, ApiResponse, API_URL } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
@@ -29,11 +29,18 @@ interface Resource {
   createdAt: string;
   uploadedBy: { firstName: string; lastName: string };
   classRoom: { id: string; name: string } | null;
+  subject: { id: string; name: string; code: string } | null;
 }
 
 interface ClassRoom {
   id: string;
   name: string;
+}
+
+interface Subject {
+  id: string;
+  name: string;
+  code: string;
 }
 
 const RESOURCE_TYPE_LABELS: Record<string, string> = {
@@ -67,24 +74,28 @@ export default function ResourcesPage() {
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [filterClass, setFilterClass] = useState("");
+  const [filterSubject, setFilterSubject] = useState("");
   const [filterType, setFilterType] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "destructive"; text: string } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", type: "ASSIGNMENT", classRoomId: "" });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [deletingClass, setDeletingClass] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", type: "ASSIGNMENT", classRoomId: "", subjectId: "" });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(() => {
     const params = new URLSearchParams();
     if (filterClass) params.set("classId", filterClass);
+    if (filterSubject) params.set("subjectId", filterSubject);
     if (filterType) params.set("type", filterType);
     api
       .get<ApiResponse<Resource[]>>(`/resources?${params}`)
       .then((r) => setResources(r.data))
       .catch(() => null);
-  }, [filterClass, filterType]);
+  }, [filterClass, filterSubject, filterType]);
 
   useEffect(() => {
     load();
@@ -93,23 +104,25 @@ export default function ResourcesPage() {
   useEffect(() => {
     if (!isParentOrStudent) {
       api.get<ApiResponse<ClassRoom[]>>("/classes").then((r) => setClasses(r.data)).catch(() => null);
+      api.get<ApiResponse<Subject[]>>("/subjects").then((r) => setSubjects(r.data)).catch(() => null);
     }
   }, [isParentOrStudent]);
 
   async function uploadResource(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedFile) {
-      setMessage({ type: "destructive", text: "Please select a file to upload" });
+    if (!selectedFiles.length) {
+      setMessage({ type: "destructive", text: "Please select at least one file to upload" });
       return;
     }
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      selectedFiles.forEach((file) => formData.append("files", file));
       formData.append("title", form.title);
       formData.append("type", form.type);
       if (form.description) formData.append("description", form.description);
       if (form.classRoomId) formData.append("classRoomId", form.classRoomId);
+      if (form.subjectId) formData.append("subjectId", form.subjectId);
 
       const token = getAccessToken();
       const res = await fetch(`${API_URL}/resources`, {
@@ -123,10 +136,10 @@ export default function ResourcesPage() {
       }
 
       setDialogOpen(false);
-      setForm({ title: "", description: "", type: "ASSIGNMENT", classRoomId: "" });
-      setSelectedFile(null);
+      setForm({ title: "", description: "", type: "ASSIGNMENT", classRoomId: "", subjectId: "" });
+      setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setMessage({ type: "success", text: "Resource uploaded successfully." });
+      setMessage({ type: "success", text: `${selectedFiles.length} resource file(s) uploaded successfully.` });
       load();
     } catch (err) {
       setMessage({ type: "destructive", text: err instanceof Error ? err.message : "Upload failed" });
@@ -143,6 +156,26 @@ export default function ResourcesPage() {
       load();
     } catch (err) {
       setMessage({ type: "destructive", text: err instanceof Error ? err.message : "Failed to delete" });
+    }
+  }
+
+  async function deleteClassResources() {
+    const selectedClass = classes.find((classRoom) => classRoom.id === filterClass);
+    if (!selectedClass) return;
+    const teacherNote = user?.role === "TEACHER" ? " that you uploaded" : "";
+    if (!confirm(`Delete all resources${teacherNote} for ${selectedClass.name}? This cannot be undone.`)) return;
+
+    setDeletingClass(true);
+    try {
+      const response = await api.delete<ApiResponse<{ count: number }>>(
+        `/resources/bulk?classId=${encodeURIComponent(filterClass)}`
+      );
+      setMessage({ type: "success", text: response.message ?? `${response.data.count} resource(s) deleted.` });
+      load();
+    } catch (err) {
+      setMessage({ type: "destructive", text: err instanceof Error ? err.message : "Failed to delete class resources" });
+    } finally {
+      setDeletingClass(false);
     }
   }
 
@@ -185,6 +218,14 @@ export default function ResourcesPage() {
             </Select>
           </div>
           <div className="w-48">
+            <Select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)}>
+              <option value="">All subjects</option>
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>{subject.name}</option>
+              ))}
+            </Select>
+          </div>
+          <div className="w-48">
             <Select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <option value="">All types</option>
               {Object.entries(RESOURCE_TYPE_LABELS).map(([v, l]) => (
@@ -192,6 +233,12 @@ export default function ResourcesPage() {
               ))}
             </Select>
           </div>
+          {canDelete && filterClass && (
+            <Button variant="outline" onClick={deleteClassResources} disabled={deletingClass}>
+              {deletingClass ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+              {deletingClass ? "Deleting…" : "Delete class resources"}
+            </Button>
+          )}
         </div>
       )}
 
@@ -211,6 +258,7 @@ export default function ResourcesPage() {
             <TR>
               <TH>Title</TH>
               <TH>Type</TH>
+              <TH className="hidden md:table-cell">Subject</TH>
               <TH className="hidden md:table-cell">Class</TH>
               <TH className="hidden lg:table-cell">Uploaded by</TH>
               <TH className="hidden lg:table-cell">Date</TH>
@@ -233,6 +281,9 @@ export default function ResourcesPage() {
                   <Badge variant={TYPE_BADGE_VARIANT[r.type] ?? "secondary"}>
                     {RESOURCE_TYPE_LABELS[r.type] ?? r.type}
                   </Badge>
+                </TD>
+                <TD className="hidden text-sm md:table-cell">
+                  {r.subject ? r.subject.name : <span className="text-muted-foreground">—</span>}
                 </TD>
                 <TD className="hidden text-sm md:table-cell">
                   {r.classRoom ? r.classRoom.name : <span className="text-muted-foreground">All classes</span>}
@@ -272,7 +323,7 @@ export default function ResourcesPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <Label htmlFor="rtype">Type</Label>
               <Select
@@ -282,6 +333,19 @@ export default function ResourcesPage() {
               >
                 {Object.entries(RESOURCE_TYPE_LABELS).map(([v, l]) => (
                   <option key={v} value={v}>{l}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="rsubject">Subject (optional)</Label>
+              <Select
+                id="rsubject"
+                value={form.subjectId}
+                onChange={(e) => setForm((f) => ({ ...f, subjectId: e.target.value }))}
+              >
+                <option value="">No subject</option>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>{subject.name}</option>
                 ))}
               </Select>
             </div>
@@ -311,26 +375,27 @@ export default function ResourcesPage() {
           </div>
 
           <div>
-            <Label htmlFor="rfile">File (PDF or Word document, max 10 MB)</Label>
+            <Label htmlFor="rfile">Files (up to 10 PDF or Word documents, max 10 MB each)</Label>
             <input
               ref={fileInputRef}
               id="rfile"
               type="file"
+              multiple
               accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               required
               className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-sm file:font-medium"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => setSelectedFiles(Array.from(e.target.files ?? []).slice(0, 10))}
             />
-            {selectedFile && (
+            {selectedFiles.length > 0 && (
               <p className="mt-1 text-xs text-muted-foreground">
-                Selected: {selectedFile.name} ({formatBytes(selectedFile.size)})
+                Selected: {selectedFiles.map((file) => `${file.name} (${formatBytes(file.size)})`).join(", ")}
               </p>
             )}
           </div>
 
           <Button type="submit" className="w-full" disabled={uploading}>
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-            {uploading ? "Uploading…" : "Upload Resource"}
+            {uploading ? "Uploading…" : `Upload ${selectedFiles.length || ""} Resource${selectedFiles.length === 1 ? "" : "s"}`}
           </Button>
         </form>
       </Dialog>
