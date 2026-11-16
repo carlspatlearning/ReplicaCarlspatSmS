@@ -1,4 +1,6 @@
 import { Request, Router } from "express";
+import fs from "fs/promises";
+import path from "path";
 import multer from "multer";
 import { z } from "zod";
 import { Role, ResourceType } from "@prisma/client";
@@ -9,7 +11,7 @@ import { validate } from "../middleware/validate";
 import { authenticate, authorize, ADMINS } from "../middleware/auth";
 import { currentSchoolId, requireActiveSchool } from "../middleware/tenant";
 import { audit } from "../middleware/audit";
-import { uploadDocument, UploadResult } from "../services/storage";
+import { LOCAL_UPLOAD_DIR, uploadDocument, UploadResult } from "../services/storage";
 
 const ALLOWED_DOC_TYPES = [
   "application/pdf",
@@ -42,6 +44,22 @@ function makeAbsolute(req: Request, url: string): string {
 
 const router = Router();
 router.use(authenticate, requireActiveSchool);
+
+async function canReadResource(req: Request, classRoomId: string | null): Promise<boolean> {
+  if (!classRoomId) return true;
+  if (req.auth!.role === Role.PARENT) {
+    const parent = await prisma.parent.findUnique({
+      where: { userId: req.auth!.sub },
+      include: { students: { select: { classRoomId: true } } },
+    });
+    return (parent?.students ?? []).some((student) => student.classRoomId === classRoomId);
+  }
+  if (req.auth!.role === Role.STUDENT) {
+    const student = await prisma.student.findUnique({ where: { userId: req.auth!.sub } });
+    return student?.classRoomId === classRoomId;
+  }
+  return true;
+}
 
 // POST /resources — upload a resource document (teachers + admins)
 router.post(
@@ -137,6 +155,46 @@ router.get(
 
     const items = resources.map((r) => ({ ...r, fileUrl: makeAbsolute(req, r.fileUrl) }));
     res.json({ success: true, data: items });
+  })
+);
+
+// GET /resources/:id/download — authenticated, tenant-scoped file delivery.
+// Keeping this behind the API prevents the UI from opening a stale raw storage
+// URL and returning the generic JSON route error in a new browser tab.
+router.get(
+  "/:id/download",
+  asyncHandler(async (req, res) => {
+    const resource = await prisma.resource.findUnique({ where: { id: req.params.id } });
+    if (!resource || resource.schoolId !== currentSchoolId(req)) throw ApiError.notFound("Resource not found");
+    if (!(await canReadResource(req, resource.classRoomId))) throw ApiError.notFound("Resource not found");
+
+    let contents: Buffer;
+    if (resource.fileUrl.startsWith("/uploads/") || /^https?:\/\/[^/]+\/uploads\//.test(resource.fileUrl)) {
+      const uploadPath = resource.fileUrl.startsWith("/")
+        ? resource.fileUrl
+        : new URL(resource.fileUrl).pathname;
+      const relativePath = uploadPath.replace(/^\/uploads\//, "");
+      const resolvedPath = path.resolve(LOCAL_UPLOAD_DIR, relativePath);
+      const uploadsRoot = `${path.resolve(LOCAL_UPLOAD_DIR)}${path.sep}`;
+      if (!resolvedPath.startsWith(uploadsRoot)) throw ApiError.notFound("Resource file is unavailable");
+      try {
+        contents = await fs.readFile(resolvedPath);
+      } catch {
+        throw ApiError.notFound("This resource file is no longer available. Ask an administrator to upload it again.");
+      }
+    } else {
+      const upstream = await fetch(resource.fileUrl);
+      if (!upstream.ok) {
+        throw ApiError.notFound("This resource file is no longer available. Ask an administrator to upload it again.");
+      }
+      contents = Buffer.from(await upstream.arrayBuffer());
+    }
+
+    const safeName = resource.fileName.replace(/[\r\n"]/g, "_");
+    res.setHeader("Content-Type", resource.mimeType || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${safeName}"`);
+    res.setHeader("Content-Length", contents.length);
+    res.send(contents);
   })
 );
 

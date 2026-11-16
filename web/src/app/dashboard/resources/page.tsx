@@ -146,13 +146,15 @@ export default function ResourcesPage() {
     }
   }
 
-  function downloadResource(r: Resource) {
-    const a = document.createElement("a");
-    a.href = r.fileUrl;
-    a.download = r.fileName;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.click();
+  async function downloadResource(r: Resource) {
+    try {
+      await api.download(`/resources/${r.id}/download`, r.fileName);
+    } catch (err) {
+      setMessage({
+        type: "destructive",
+        text: err instanceof Error ? err.message : "Could not download this resource.",
+      });
+    }
   }
 
   return (

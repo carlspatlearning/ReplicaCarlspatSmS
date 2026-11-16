@@ -14,6 +14,10 @@ Push the updated `carlspatlearning/carlspat-sms` repository to its `main` branch
 2. Render will read the repository's `render.yaml`. Review the service and select the plan you want before creating it; the plan can affect cost and whether the service sleeps when idle.
 3. When prompted for `DATABASE_URL`, open the Supabase project and choose **Connect → Session pooler**. Copy the PostgreSQL connection string (port 5432) into Render's secret field. Do not use the Supabase dashboard URL, publishable key, or service-role key here.
 4. Confirm the service has generated `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`, then create/deploy the Blueprint.
+   Also enter `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+   `CLOUDINARY_API_SECRET`. These are required for durable production logos,
+   passports, and resource files; Render's service filesystem is erased during
+   deploys and restarts.
 5. Wait for Render's deploy and health check. The API URL will look like `https://olufunmilyo-sms-api.onrender.com`; verify `https://<that-host>/api/v1/health` returns a healthy JSON response.
 
 Render's Blueprint `sync: false` prompts for database credentials without committing them. Its `healthCheckPath` checks the API endpoint.

@@ -177,6 +177,22 @@ describe("Lists are fenced to the caller's school", () => {
     expect(whereOf(mockPrisma.resource.findMany).schoolId).toBe(SCHOOL_A);
   });
 
+  it("reports a useful error when a resource file was lost from local storage", async () => {
+    mockPrisma.resource.findUnique.mockResolvedValue({
+      id: "resource-1",
+      schoolId: SCHOOL_A,
+      classRoomId: null,
+      fileUrl: "/uploads/resources/missing.pdf",
+      fileName: "lesson.pdf",
+      mimeType: "application/pdf",
+    });
+    const res = await request(app)
+      .get("/api/v1/resources/resource-1/download")
+      .set("Authorization", `Bearer ${adminA}`);
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/upload it again/i);
+  });
+
   it("GET /settings/grading filters by school", async () => {
     const res = await request(app).get("/api/v1/settings/grading").set("Authorization", `Bearer ${adminA}`);
     expect(res.status).toBe(200);
@@ -380,10 +396,11 @@ describe("Public school branding resolves to one school, never a guess", () => {
   });
 
   it("serves the only school when there is exactly one and no slug", async () => {
-    mockPrisma.school.findMany.mockResolvedValue([MINE]);
+    mockPrisma.school.findMany.mockResolvedValue([{ ...MINE, logoUrl: "/uploads/branding/logo.png", stampUrl: null }]);
     const res = await request(app).get("/api/v1/settings/school");
     expect(res.status).toBe(200);
     expect(res.body.data.id).toBe(SCHOOL_A);
+    expect(res.body.data.logoUrl).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/uploads\/branding\/logo\.png$/);
   });
 
   it("refuses to pick for you once a second school exists", async () => {

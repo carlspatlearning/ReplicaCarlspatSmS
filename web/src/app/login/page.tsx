@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, SyntheticEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { api, ApiResponse } from "@/lib/api";
@@ -29,6 +29,12 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function useFallbackLogo(event: SyntheticEvent<HTMLImageElement>) {
+    const image = event.currentTarget;
+    image.onerror = null;
+    image.src = "/icons/icon-192.png";
+  }
 
   useEffect(() => {
     // Nobody is signed in yet, so the page has to say which school it is showing.
@@ -66,7 +72,7 @@ function LoginForm() {
       </div>
       <div className="mb-6 text-center">
         {school?.logoUrl ? (
-          <img src={school.logoUrl} alt="School logo" className="mx-auto h-16 w-16 rounded-full object-cover" />
+          <img src={school.logoUrl} onError={useFallbackLogo} alt="School logo" className="mx-auto h-16 w-16 rounded-full object-cover" />
         ) : (
           <img src="/icons/icon-192.png" alt="OlufunmilyoSMS school logo" className="mx-auto h-16 w-16 rounded-full object-contain" />
         )}

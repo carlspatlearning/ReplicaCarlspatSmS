@@ -67,7 +67,15 @@ export function Sidebar({
       >
         <div className="flex h-16 items-center gap-3 border-b px-4">
           {school?.logoUrl ? (
-            <img src={school.logoUrl} alt="School logo" className="h-9 w-9 rounded-full object-cover" />
+            <img
+              src={school.logoUrl}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = "/icons/icon-192.png";
+              }}
+              alt="School logo"
+              className="h-9 w-9 rounded-full object-cover"
+            />
           ) : (
             <img src="/icons/icon-192.png" alt="OlufunmilyoSMS school logo" className="h-9 w-9 rounded-full object-contain" />
           )}

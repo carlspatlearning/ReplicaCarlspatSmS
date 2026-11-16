@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
@@ -39,6 +39,14 @@ const publicSchoolFields = {
   currency: true,
 } satisfies Prisma.SchoolSelect;
 
+type PublicSchool = Prisma.SchoolGetPayload<{ select: typeof publicSchoolFields }>;
+
+function withAbsoluteBrandingUrl(req: Request, school: PublicSchool): PublicSchool {
+  const apiOrigin = `${req.protocol}://${req.get("host")}`;
+  const absolute = (url: string | null) => url?.startsWith("/") ? `${apiOrigin}${url}` : url;
+  return { ...school, logoUrl: absolute(school.logoUrl), stampUrl: absolute(school.stampUrl) };
+}
+
 // GET /settings/school?slug=… — school branding, for the login page and for
 // every signed-in screen that shows the school's name and logo.
 //
@@ -65,7 +73,7 @@ router.get(
             where: { id: payload.schoolId },
             select: publicSchoolFields,
           });
-          if (school) return res.json({ success: true, data: school });
+          if (school) return res.json({ success: true, data: withAbsoluteBrandingUrl(req, school) });
         }
       } catch {
         // An expired or invalid token is not an error here — this endpoint works
@@ -77,7 +85,7 @@ router.get(
     if (slug) {
       const school = await prisma.school.findUnique({ where: { slug }, select: publicSchoolFields });
       if (!school) throw ApiError.notFound("School not found");
-      return res.json({ success: true, data: school });
+      return res.json({ success: true, data: withAbsoluteBrandingUrl(req, school) });
     }
 
     const schools = await prisma.school.findMany({
@@ -89,7 +97,7 @@ router.get(
     if (schools.length > 1) {
       throw ApiError.badRequest("Several schools use this system — specify which with ?slug=");
     }
-    res.json({ success: true, data: schools[0] });
+    res.json({ success: true, data: withAbsoluteBrandingUrl(req, schools[0]) });
   })
 );
 
@@ -124,7 +132,7 @@ router.put(
       select: publicSchoolFields,
     });
     audit(req, "settings.school_update", "School", schoolId, req.body);
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: withAbsoluteBrandingUrl(req, updated) });
   })
 );
 

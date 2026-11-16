@@ -21,5 +21,13 @@ services:
         value: 7d
       - key: CORS_ORIGIN
         value: https://carlspat-sms.vercel.app
+      # Production uploads must use durable object storage. Without these,
+      # Render's ephemeral filesystem loses logos/resources on each deploy.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: SEED_ON_START
         value: "false"
