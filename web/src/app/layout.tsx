@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   applicationName: "Carlspat Private School",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/carlspat-icon.svg?v=2", type: "image/svg+xml" }],
-    apple: [{ url: "/carlspat-icon.svg?v=2", type: "image/svg+xml" }],
+    icon: [{ url: "/carlspat-crest.png?v=3", type: "image/png" }],
+    apple: [{ url: "/carlspat-crest.png?v=3", type: "image/png" }],
   },
 };
 

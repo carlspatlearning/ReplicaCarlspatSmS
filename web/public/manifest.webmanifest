@@ -12,9 +12,9 @@
   "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "/carlspat-icon.svg?v=2",
+      "src": "/carlspat-crest.png?v=3",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
