@@ -65,7 +65,10 @@ export async function uploadDocument(buffer: Buffer, folder: string, filename: s
 
 async function uploadDocumentToCloudinary(buffer: Buffer, folder: string, filename: string): Promise<UploadResult> {
   const timestamp = Math.floor(Date.now() / 1000);
-  const publicId = `carlspat/${folder}/${path.parse(filename).name}-${timestamp}`;
+  // Raw assets need their extension in the public ID. Use an opaque ID because
+  // document filenames may contain characters Cloudinary rejects (for example &).
+  const extension = path.extname(filename).toLowerCase();
+  const publicId = `carlspat/${folder}/${crypto.randomUUID()}${extension}`;
   const toSign = `public_id=${publicId}&timestamp=${timestamp}${env.cloudinary.apiSecret}`;
   const signature = crypto.createHash("sha1").update(toSign).digest("hex");
 
