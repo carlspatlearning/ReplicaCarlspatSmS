@@ -33,7 +33,7 @@ function LoginForm() {
   function useFallbackLogo(event: SyntheticEvent<HTMLImageElement>) {
     const image = event.currentTarget;
     image.onerror = null;
-    image.src = "/icons/icon-192.png";
+    image.src = "/carlspat-crest.png";
   }
 
   useEffect(() => {
@@ -71,10 +71,12 @@ function LoginForm() {
         <ThemeToggle />
       </div>
       <div className="mb-6 text-center">
-        {school?.logoUrl ? (
+        {!school || school.name.trim().toLowerCase() === "carlspat private school" ? (
+          <img src="/carlspat-crest.png" alt="Carlspat Private School logo" className="mx-auto h-16 w-16 object-contain" />
+        ) : school.logoUrl ? (
           <img src={school.logoUrl} onError={useFallbackLogo} alt="School logo" className="mx-auto h-16 w-16 rounded-full object-cover" />
         ) : (
-          <img src="/icons/icon-192.png" alt="OlufunmilyoSMS school logo" className="mx-auto h-16 w-16 rounded-full object-contain" />
+          <img src="/carlspat-crest.png" alt="School logo" className="mx-auto h-16 w-16 object-contain" />
         )}
         <h1 className="mt-3 text-2xl font-bold">{school?.name ?? "Carlspat Private School"}</h1>
         <p className="text-sm italic text-muted-foreground">
