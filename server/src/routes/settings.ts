@@ -117,6 +117,7 @@ router.put(
         logoUrl: z.string().url().or(z.string().startsWith("/uploads/")).nullable().optional(),
         stampUrl: z.string().url().or(z.string().startsWith("/uploads/")).nullable().optional(),
         headTeacherName: z.string().nullable().optional(),
+        numberPrefix: z.string().min(2).max(10).optional(),
         currency: z.string().length(3).optional(),
       }),
     })

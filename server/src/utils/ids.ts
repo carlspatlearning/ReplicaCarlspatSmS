@@ -12,6 +12,9 @@ async function prefixFor(schoolId: string): Promise<string> {
     select: { numberPrefix: true },
   });
   if (!school) throw ApiError.notFound("School not found");
+  if (!school.numberPrefix || school.numberPrefix === "CPS" || school.numberPrefix === "SCH") {
+    return "SIS";
+  }
   return school.numberPrefix;
 }
 

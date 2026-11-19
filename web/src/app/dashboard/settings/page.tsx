@@ -16,7 +16,7 @@ import { Dialog } from "@/components/ui/dialog";
 
 interface School {
   name: string; motto: string; address: string; phone: string; email: string;
-  logoUrl: string | null; headTeacherName: string | null;
+  logoUrl: string | null; headTeacherName: string | null; numberPrefix?: string;
 }
 interface Term { id: string; name: string; isCurrent: boolean; startDate: string; endDate: string }
 interface SessionRow { id: string; name: string; isCurrent: boolean; terms: Term[] }
@@ -88,6 +88,7 @@ function SchoolInfo() {
         phone: school.phone,
         email: school.email,
         headTeacherName: school.headTeacherName,
+        numberPrefix: school.numberPrefix ?? "SIS",
         logoUrl,
       });
       setSchool(r.data);
@@ -136,6 +137,10 @@ function SchoolInfo() {
           <div>
             <Label htmlFor="shead">Head teacher&apos;s name</Label>
             <Input id="shead" value={school.headTeacherName ?? ""} onChange={set("headTeacherName")} />
+          </div>
+          <div>
+            <Label htmlFor="sprefix">Admission number prefix</Label>
+            <Input id="sprefix" value={school.numberPrefix ?? "SIS"} onChange={set("numberPrefix" as any)} placeholder="SIS" />
           </div>
           <div>
             <Label htmlFor="slogo">School logo</Label>

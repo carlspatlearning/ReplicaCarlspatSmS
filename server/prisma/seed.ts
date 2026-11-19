@@ -202,6 +202,13 @@ async function main() {
     }
   }
 
+  // Update any remaining CPS prefixes to SIS
+  await prisma.school.updateMany({ data: { numberPrefix: "SIS" } });
+  const oldStudents = await prisma.student.findMany({ where: { admissionNo: { startsWith: "CPS/" } } });
+  for (const s of oldStudents) {
+    await prisma.student.update({ where: { id: s.id }, data: { admissionNo: s.admissionNo.replace(/^CPS\//, "SIS/") } });
+  }
+
   console.log("✔ Seed completed for", school.name);
 }
 
