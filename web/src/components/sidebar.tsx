@@ -53,7 +53,6 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const items = NAV.filter((n) => n.roles.includes(user.role));
-  const isCarlspat = !school || school.name.trim().toLowerCase() === "carlspat private school";
 
   return (
     <>
@@ -67,23 +66,21 @@ export function Sidebar({
         )}
       >
         <div className="flex h-16 items-center gap-3 border-b px-4">
-          {isCarlspat ? (
-            <img src="/carlspat-crest.png" alt="Carlspat Private School logo" className="h-9 w-9 object-contain" />
-          ) : school.logoUrl ? (
+          {school?.logoUrl ? (
             <img
               src={school.logoUrl}
               onError={(event) => {
                 event.currentTarget.onerror = null;
-                event.currentTarget.src = "/carlspat-crest.png";
+                event.currentTarget.src = "/samen-logo.png";
               }}
               alt="School logo"
               className="h-9 w-9 rounded-full object-cover"
             />
           ) : (
-            <img src="/carlspat-crest.png" alt="School logo" className="h-9 w-9 object-contain" />
+            <img src="/samen-logo.png" alt="Samen International School logo" className="h-9 w-9 object-contain" />
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold leading-tight">{school?.name ?? "Carlspat Private School"}</p>
+            <p className="truncate text-sm font-bold leading-tight">{school?.name ?? "Samen International School"}</p>
             <p className="truncate text-[11px] text-muted-foreground">Management System</p>
           </div>
           <button className="ml-auto rounded-md p-1 hover:bg-secondary lg:hidden" onClick={onClose} aria-label="Close menu">

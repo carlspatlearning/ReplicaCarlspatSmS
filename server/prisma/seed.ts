@@ -16,17 +16,16 @@ async function main() {
   // adopting whichever school happens to be first — which, on a platform with
   // several schools, would seed one school's data into another.
   const school = await prisma.school.upsert({
-    where: { slug: "carlspat-private-school" },
+    where: { slug: "samen-international-school" },
     update: {},
     create: {
-      slug: "carlspat-private-school",
-      name: "Carlspat Private School",
-      numberPrefix: "CPS",
-      motto: "Emphasis on All-Round Development",
-      address:
-        "Surulere, Old Keye Water Factory, Opposite Luku Panel Beater, Ora Road, Ido Ekiti, Ekiti State, Nigeria",
-      phone: "08067281676",
-      email: "carlspatprivateschool@outlook.com",
+      slug: "samen-international-school",
+      name: "Samen International School",
+      numberPrefix: "SIS",
+      motto: "Excellence in Education",
+      address: "Samen International School Campus",
+      phone: "08000000000",
+      email: "admin@samen.sch.ng",
       headTeacherName: "The Head Teacher",
       subscriptionStatus: "ACTIVE",
     },
@@ -134,6 +133,7 @@ async function main() {
 
   await upsertUser("superadmin@carlspat.sch.ng", Role.SUPER_ADMIN, "System", "Owner", "SuperAdmin#1");
   await upsertUser("admin@carlspat.sch.ng", Role.ADMIN, "Adebola", "Ogunleye", "Admin#12345", "08067281676");
+  await upsertUser("admin@samen.sch.ng", Role.ADMIN, "Administrator", "Samen", "Admin#12345", "08000000000");
   await upsertUser("bursar@carlspat.sch.ng", Role.ACCOUNTANT, "Funmi", "Adeyemi", "Bursar#1234");
 
   // Teacher + profile, assigned as form teacher of Primary 5

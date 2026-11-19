@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: olufunmilyo-sms-api
+    name: samen-sms-api
     runtime: node
     rootDir: server
     buildCommand: npm ci --include=dev && npm run prisma:generate && npm run build && npm prune --omit=dev
@@ -20,7 +20,7 @@ services:
       - key: JWT_REFRESH_TTL
         value: 7d
       - key: CORS_ORIGIN
-        value: https://carlspat-sms.vercel.app
+        value: https://samen-internationalschool.vercel.app,http://localhost:3000
       # Production uploads must use durable object storage. Without these,
       # Render's ephemeral filesystem loses logos/resources on each deploy.
       - key: CLOUDINARY_CLOUD_NAME

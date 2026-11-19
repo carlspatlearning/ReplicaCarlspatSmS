@@ -3,14 +3,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Carlspat Private School", template: "%s · Carlspat Private School" },
+  title: { default: "Samen International School", template: "%s · Samen International School" },
   description:
-    "Carlspat Private School Management System — Emphasis on All-Round Development. Ido Ekiti, Ekiti State, Nigeria.",
-  applicationName: "Carlspat Private School",
+    "Samen International School Management System — Portal for parents, students, teachers, and staff.",
+  applicationName: "Samen International School",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/carlspat-crest.png?v=3", type: "image/png" }],
-    apple: [{ url: "/carlspat-crest.png?v=3", type: "image/png" }],
+    icon: [{ url: "/samen-logo.png?v=4", type: "image/png" }],
+    apple: [{ url: "/samen-logo.png?v=4", type: "image/png" }],
   },
 };
 

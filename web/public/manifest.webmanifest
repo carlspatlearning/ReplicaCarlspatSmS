@@ -1,18 +1,21 @@
 {
   "id": "/",
-  "name": "Carlspat Private School",
-  "short_name": "Carlspat SMS",
-  "description": "Carlspat Private School portal for parents, students, teachers, staff and administrators.",
+  "name": "Samen International School",
+  "short_name": "Samen SMS",
+  "description": "Samen International School portal for parents, students, teachers, staff and administrators.",
   "start_url": "/login?source=android",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#1e3a5f",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
     {
-      "src": "/carlspat-crest.png?v=3",
+      "src": "/samen-logo.png?v=4",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any"

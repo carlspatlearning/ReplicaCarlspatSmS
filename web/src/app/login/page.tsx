@@ -33,7 +33,7 @@ function LoginForm() {
   function useFallbackLogo(event: SyntheticEvent<HTMLImageElement>) {
     const image = event.currentTarget;
     image.onerror = null;
-    image.src = "/carlspat-crest.png";
+    image.src = "/samen-logo.png";
   }
 
   useEffect(() => {
@@ -71,23 +71,21 @@ function LoginForm() {
         <ThemeToggle />
       </div>
       <div className="mb-6 text-center">
-        {!school || school.name.trim().toLowerCase() === "carlspat private school" ? (
-          <img src="/carlspat-crest.png" alt="Carlspat Private School logo" className="mx-auto h-16 w-16 object-contain" />
-        ) : school.logoUrl ? (
+        {school?.logoUrl ? (
           <img src={school.logoUrl} onError={useFallbackLogo} alt="School logo" className="mx-auto h-16 w-16 rounded-full object-cover" />
         ) : (
-          <img src="/carlspat-crest.png" alt="School logo" className="mx-auto h-16 w-16 object-contain" />
+          <img src="/samen-logo.png" alt="Samen International School logo" className="mx-auto h-16 w-16 object-contain" />
         )}
-        <h1 className="mt-3 text-2xl font-bold">{school?.name ?? "Carlspat Private School"}</h1>
+        <h1 className="mt-3 text-2xl font-bold">{school?.name ?? "Samen International School"}</h1>
         <p className="text-sm italic text-muted-foreground">
-          “{school?.motto ?? "Emphasis on All-Round Development"}”
+          “{school?.motto ?? "Excellence in Education"}”
         </p>
       </div>
 
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Sign in to your portal</CardTitle>
-            <CardDescription>Admin · Teacher · Parent · Student · Bursar · Stakeholder</CardDescription>
+          <CardDescription>Admin · Teacher · Parent · Student · Bursar · Stakeholder</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
