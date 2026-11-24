@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GraduationCap, Loader2, Plus, Save } from "lucide-react";
+import { GraduationCap, Loader2, Pencil, Plus, Save, X } from "lucide-react";
 import { api, ApiResponse } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
@@ -19,7 +19,7 @@ interface School {
   logoUrl: string | null; headTeacherName: string | null; numberPrefix?: string;
 }
 interface Term { id: string; name: string; isCurrent: boolean; startDate: string; endDate: string }
-interface SessionRow { id: string; name: string; isCurrent: boolean; terms: Term[] }
+interface SessionRow { id: string; name: string; startDate: string; endDate: string; isCurrent: boolean; terms: Term[] }
 interface GradeScale { minScore: number; maxScore: number; grade: string; remark: string }
 interface Assessment { name: string; maxScore: number; order: number; isExam: boolean }
 
@@ -167,6 +167,7 @@ function Sessions() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [message, setMessage] = useState<{ type: "success" | "destructive"; text: string } | null>(null);
   const [form, setForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [termForm, setTermForm] = useState({ sessionId: "", name: "", startDate: "", endDate: "" });
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState<string | null>(null);
@@ -177,6 +178,21 @@ function Sessions() {
   useEffect(() => {
     load();
   }, []);
+
+  function editSession(session: SessionRow) {
+    setEditingSessionId(session.id);
+    setForm({
+      name: session.name,
+      startDate: session.startDate.slice(0, 10),
+      endDate: session.endDate.slice(0, 10),
+    });
+    setMessage(null);
+  }
+
+  function cancelSessionEdit() {
+    setEditingSessionId(null);
+    setForm({ name: "", startDate: "", endDate: "" });
+  }
 
   async function promoteAll(session: SessionRow) {
     setPromotingId(session.id);
@@ -197,10 +213,17 @@ function Sessions() {
   async function addSession(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setMessage(null);
     try {
-      await api.post("/settings/sessions", { ...form, isCurrent: sessions.length === 0 });
+      if (editingSessionId) {
+        await api.put(`/settings/sessions/${editingSessionId}`, form);
+        setMessage({ type: "success", text: "Session updated" });
+      } else {
+        await api.post("/settings/sessions", { ...form, isCurrent: sessions.length === 0 });
+        setMessage({ type: "success", text: "Session created" });
+      }
       setForm({ name: "", startDate: "", endDate: "" });
-      setMessage({ type: "success", text: "Session created" });
+      setEditingSessionId(null);
       load();
     } catch (err) {
       setMessage({ type: "destructive", text: err instanceof Error ? err.message : "Failed" });
@@ -248,16 +271,21 @@ function Sessions() {
             <CardTitle>
               {s.name} {s.isCurrent && <Badge variant="success" className="ml-2">Current session</Badge>}
             </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmPromote(s)}
-              disabled={promotingId === s.id}
-            >
-              {promotingId === s.id
-                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Promoting…</>
-                : <><GraduationCap className="h-3.5 w-3.5" /> Promote All Students</>}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => editSession(s)}>
+                <Pencil className="h-3.5 w-3.5" /> Edit session
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmPromote(s)}
+                disabled={promotingId === s.id}
+              >
+                {promotingId === s.id
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Promoting…</>
+                  : <><GraduationCap className="h-3.5 w-3.5" /> Promote All Students</>}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -307,7 +335,7 @@ function Sessions() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>New academic session</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{editingSessionId ? "Edit academic session" : "New academic session"}</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={addSession} className="space-y-3">
               <div>
@@ -324,9 +352,20 @@ function Sessions() {
                   <Input id="sessend" type="date" required value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
                 </div>
               </div>
-              <Button type="submit" disabled={saving} className="w-full">
-                <Plus className="h-4 w-4" /> Create session
-              </Button>
+              {editingSessionId ? (
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={cancelSessionEdit} disabled={saving} className="flex-1">
+                    <X className="h-4 w-4" /> Cancel
+                  </Button>
+                  <Button type="submit" disabled={saving} className="flex-1">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save changes
+                  </Button>
+                </div>
+              ) : (
+                <Button type="submit" disabled={saving} className="w-full">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Create session
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>

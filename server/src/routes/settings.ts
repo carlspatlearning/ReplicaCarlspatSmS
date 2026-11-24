@@ -181,6 +181,37 @@ router.post(
   })
 );
 
+router.put(
+  "/sessions/:id",
+  authenticate,
+  authorize(...ADMINS),
+  validate(
+    z.object({
+      params: z.object({ id: z.string() }),
+      body: z.object({
+        name: z.string().regex(/^\d{4}\/\d{4}$/, "Use the format 2025/2026"),
+        startDate: z.coerce.date(),
+        endDate: z.coerce.date(),
+      }),
+    })
+  ),
+  asyncHandler(async (req, res) => {
+    const schoolId = currentSchoolId(req);
+    const existing = await prisma.academicSession.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, schoolId: true },
+    });
+    if (!existing || existing.schoolId !== schoolId) throw ApiError.notFound("Session not found");
+
+    const updated = await prisma.academicSession.update({
+      where: { id: existing.id },
+      data: req.body,
+    });
+    audit(req, "settings.session_update", "AcademicSession", updated.id);
+    res.json({ success: true, data: updated });
+  })
+);
+
 router.post(
   "/sessions/:id/terms",
   authenticate,
