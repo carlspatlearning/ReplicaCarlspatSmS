@@ -115,12 +115,15 @@ router.post(
 
     const teacher = await prisma.teacher.create({
       data: {
-        schoolId,
         staffNo: await nextStaffNo(schoolId),
         ...profile,
+        // A nested user create selects Prisma's checked create input. Connect
+        // the required school relation explicitly instead of mixing that
+        // input with the schoolId scalar (which Prisma then rejects).
+        school: { connect: { id: schoolId } },
         user: {
           create: {
-            schoolId,
+            school: { connect: { id: schoolId } },
             email: email.toLowerCase(),
             passwordHash: await hashPassword(password),
             role: Role.TEACHER,

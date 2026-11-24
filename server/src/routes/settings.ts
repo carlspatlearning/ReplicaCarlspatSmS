@@ -170,7 +170,11 @@ router.post(
     // Scoped: clearing "current" must not reach into any other school's sessions.
     if (isCurrent) await prisma.academicSession.updateMany({ where: { schoolId }, data: { isCurrent: false } });
     const session = await prisma.academicSession.create({
-      data: { ...data, isCurrent: Boolean(isCurrent), schoolId },
+      data: {
+        ...data,
+        isCurrent: Boolean(isCurrent),
+        school: { connect: { id: schoolId } },
+      },
     });
     audit(req, "settings.session_create", "AcademicSession", session.id);
     res.status(201).json({ success: true, data: session });
