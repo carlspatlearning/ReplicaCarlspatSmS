@@ -288,6 +288,33 @@ function Sessions() {
             </div>
           </CardHeader>
           <CardContent>
+            {editingSessionId === s.id && (
+              <form onSubmit={addSession} className="mb-5 rounded-lg border bg-secondary/20 p-4 space-y-3">
+                <h3 className="text-sm font-semibold">Edit academic session</h3>
+                <div>
+                  <Label htmlFor={`edit-sessname-${s.id}`}>Name (e.g. 2026/2027)</Label>
+                  <Input id={`edit-sessname-${s.id}`} required pattern="\\d{4}/\\d{4}" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor={`edit-sessstart-${s.id}`}>Start</Label>
+                    <Input id={`edit-sessstart-${s.id}`} type="date" required value={form.startDate} onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label htmlFor={`edit-sessend-${s.id}`}>End</Label>
+                    <Input id={`edit-sessend-${s.id}`} type="date" required value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={cancelSessionEdit} disabled={saving}>
+                    <X className="h-4 w-4" /> Cancel
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save changes
+                  </Button>
+                </div>
+              </form>
+            )}
             <Table>
               <THead><TR><TH>Term</TH><TH>Period</TH><TH></TH></TR></THead>
               <TBody>
@@ -334,7 +361,7 @@ function Sessions() {
       </Dialog>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        {!editingSessionId && <Card>
           <CardHeader><CardTitle>{editingSessionId ? "Edit academic session" : "New academic session"}</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={addSession} className="space-y-3">
@@ -368,7 +395,7 @@ function Sessions() {
               )}
             </form>
           </CardContent>
-        </Card>
+        </Card>}
 
         <Card>
           <CardHeader><CardTitle>New term</CardTitle></CardHeader>
