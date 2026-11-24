@@ -293,7 +293,7 @@ function Sessions() {
                 <h3 className="text-sm font-semibold">Edit academic session</h3>
                 <div>
                   <Label htmlFor={`edit-sessname-${s.id}`}>Name (e.g. 2026/2027)</Label>
-                  <Input id={`edit-sessname-${s.id}`} required pattern="\\d{4}/\\d{4}" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+                  <Input id={`edit-sessname-${s.id}`} required pattern="\d{4}/\d{4}" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
